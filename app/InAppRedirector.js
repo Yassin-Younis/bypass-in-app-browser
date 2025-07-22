@@ -215,6 +215,14 @@ export default function InAppRedirector() {
             >
                 Go to init test
             </a>
+            <a
+                href={"/chainTest"}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{textDecoration: 'none'}}
+            >
+                Go to chain test
+            </a>
 
 
             {!isInApp && !redirectUrl && (
