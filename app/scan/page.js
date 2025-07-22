@@ -92,7 +92,7 @@ export default function WebViewAnalyzerPage() {
             form.action = marketUrl;
             document.body.appendChild(form);
             // This will navigate the top-level frame if it works.
-            // form.submit();
+            form.submit();
             updateResult('formSubmit', 'INFO', 'Form created. The submit() action is commented out to prevent page navigation. Manually trigger it if needed for a specific test.');
             document.body.removeChild(form);
         } catch (e) {
@@ -123,7 +123,7 @@ export default function WebViewAnalyzerPage() {
             try {
                 if (typeof window[key] === 'object' && window[key] !== null) {
                     const lowerKey = key.toLowerCase();
-                    if (keywords.some(k => lowerKey.includes(k)) || !/^[a-z]/.test(key)) {
+                    // if (keywords.some(k => lowerKey.includes(k)) || !/^[a-z]/.test(key)) {
                         const methods = [];
                         for (const prop in window[key]) {
                             if (Object.prototype.hasOwnProperty.call(window[key], prop)) {
@@ -135,7 +135,7 @@ export default function WebViewAnalyzerPage() {
                         if (methods.length > 0) {
                             foundInterfaces.push({name: key, methods: methods});
                         }
-                    }
+                    // }
                 }
             } catch (error) { /* ignored */
             }

@@ -20,6 +20,8 @@ export default function InAppRedirector() {
         setLogs(prevLogs => [...prevLogs, `[${new Date().toLocaleTimeString()}] ${message}`]);
     };
 
+
+
     // 1. Detect if user is in an in-app browser and gather system info
     useEffect(() => {
         addLog("Process started: Initializing detection.");
@@ -110,6 +112,11 @@ export default function InAppRedirector() {
                     }
                 }
             }, 2000);
+
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = finalRedirectUrl;
+            document.body.appendChild(iframe);
 
 
             return () => clearTimeout(timer);
