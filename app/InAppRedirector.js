@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from 'next/navigation';
+import {useState, useEffect} from "react";
+import {useRouter, useSearchParams} from 'next/navigation';
 import InAppSpy from "inapp-spy";
 import Bowser from "bowser";
 
@@ -24,7 +24,7 @@ export default function InAppRedirector() {
     useEffect(() => {
         addLog("Process started: Initializing detection.");
         try {
-            const { isInApp: isInAppFromSpy, appName, ua } = InAppSpy();
+            const {isInApp: isInAppFromSpy, appName, ua} = InAppSpy();
             setIsInApp(isInAppFromSpy);
             setUserAgent(ua);
             addLog(`User Agent detected: ${ua}`);
@@ -37,9 +37,17 @@ export default function InAppRedirector() {
                 addLog(`Operating System detected: ${osName || 'Unknown'}.`);
 
                 switch (osName) {
-                    case "Android": setPhoneType("android"); addLog("Phone type identified as: Android."); break;
-                    case "iOS": setPhoneType("ios"); addLog("Phone type identified as: iOS."); break;
-                    default: setPhoneType(undefined); addLog("Could not determine phone type. Redirection will be skipped.");
+                    case "Android":
+                        setPhoneType("android");
+                        addLog("Phone type identified as: Android.");
+                        break;
+                    case "iOS":
+                        setPhoneType("ios");
+                        addLog("Phone type identified as: iOS.");
+                        break;
+                    default:
+                        setPhoneType(undefined);
+                        addLog("Could not determine phone type. Redirection will be skipped.");
                 }
             } else {
                 addLog("Not an in-app browser. No redirection necessary.");
@@ -53,7 +61,7 @@ export default function InAppRedirector() {
                 addLog("Removing 'redirected' parameter from URL using Next Router...");
                 const newSearchParams = new URLSearchParams(searchParams.toString());
                 newSearchParams.delete('redirected');
-                router.replace(`${window.location.pathname}?${newSearchParams.toString()}`, { scroll: false });
+                router.replace(`${window.location.pathname}?${newSearchParams.toString()}`, {scroll: false});
                 addLog("Removed 'redirected' parameter from URL.");
             } else {
                 addLog("No 'redirected' parameter found. Proceeding normally.");
@@ -71,7 +79,7 @@ export default function InAppRedirector() {
 
             const currentUrl = new URL(window.location.href);
             currentUrl.searchParams.set("redirected", "true");
-            const targetUrl = currentUrl.href;
+            const targetUrl = phoneType === "android" ? `https://play.google.com/store/apps/details?id=com.adamtllc.Depuff` : phoneType === "ios" ? `https://apps.apple.com/us/app/depuff-ai-debloat-your-face/id6746838126?pt=6746838126` : currentUrl.href;
             addLog(`Constructed target URL: ${targetUrl}`);
 
             let finalRedirectUrl;
@@ -104,30 +112,33 @@ export default function InAppRedirector() {
     }, [isInApp, phoneType, hasRedirected]);
 
     // Return the same JSX as before
-    return (
-        <div style={{ fontFamily: 'monospace', padding: '20px', backgroundColor: '#f5f5f5' }}>
-            <h1 style={{ borderBottom: '1px solid #ccc', paddingBottom: '10px' }}>In-App Browser Redirector Log</h1>
-            <div style={{ backgroundColor: 'white', border: '1px solid #ddd', padding: '15px', maxHeight: '400px', overflowY: 'auto' }}>
-                <ol style={{ margin: 0, paddingLeft: '20px' }}>
-                    {logs.map((log, index) => (
-                        <li key={index} style={{ padding: '4px 0', borderBottom: '1px solid #eee' }}>
-                            {log.includes("ERROR:") ? <strong style={{color: 'red'}}>{log}</strong> : log}
-                        </li>
-                    ))}
-                </ol>
-            </div>
-            {redirectUrl && (
-                <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#fffbe6', border: '1px solid #ffe58f' }}>
-                    <p>Attempting to open this page in your main browser...</p>
-                    <p>If you are not redirected automatically, please click this link:</p>
-                    <a href={redirectUrl} style={{ wordBreak: 'break-all' }}>Open in Browser</a>
-                </div>
-            )}
-            {!isInApp && !redirectUrl && (
-                <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#e6f7ff', border: '1px solid #91d5ff' }}>
-                    <p>Detection complete. You are already in a standard browser or redirection is not required.</p>
-                </div>
-            )}
+    return (<div style={{fontFamily: 'monospace', padding: '20px', backgroundColor: '#f5f5f5'}}>
+        <h1 style={{borderBottom: '1px solid #ccc', paddingBottom: '10px'}}>In-App Browser Redirector Log V2</h1>
+        <div style={{
+            backgroundColor: 'white',
+            border: '1px solid #ddd',
+            padding: '15px',
+            maxHeight: '400px',
+            overflowY: 'auto'
+        }}>
+            <ol style={{margin: 0, paddingLeft: '20px'}}>
+                {logs.map((log, index) => (
+                    <li key={index} style={{padding: '4px 0', borderBottom: '1px solid #eee'}}>
+                        {log.includes("ERROR:") ? <strong style={{color: 'red'}}>{log}</strong> : log}
+                    </li>))}
+            </ol>
         </div>
-    );
+        {redirectUrl && (<div style={{
+            marginTop: '20px', padding: '15px', backgroundColor: '#fffbe6', border: '1px solid #ffe58f'
+        }}>
+            <p>Attempting to open this page in your main browser...</p>
+            <p>If you are not redirected automatically, please click this link:</p>
+            <a href={redirectUrl} style={{wordBreak: 'break-all'}}>Open in Browser</a>
+        </div>)}
+        {!isInApp && !redirectUrl && (<div style={{
+            marginTop: '20px', padding: '15px', backgroundColor: '#e6f7ff', border: '1px solid #91d5ff'
+        }}>
+            <p>Detection complete. You are already in a standard browser or redirection is not required.</p>
+        </div>)}
+    </div>);
 }
