@@ -191,6 +191,14 @@ export default function InAppRedirector() {
             >
                 Go to final
             </a>
+            <a
+                href={"/listen"}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{textDecoration: 'none'}}
+            >
+                Go to listen
+            </a>
 
 
             {!isInApp && !redirectUrl && (
