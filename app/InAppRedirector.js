@@ -190,6 +190,7 @@ export default function InAppRedirector() {
                     { href: "/final-test", text: "Go to final" },
                     { href: "/listen", text: "Go to listen" },
                     { href: "/test1", text: "Go to test 1" },
+                    { href: "/qr", text: "Go to qr" },
                     { href: "/initTest", text: "Go to init test" },
                     { href: "/chainTest", text: "Go to chain test" },
                     { href: "/iframe", text: "Go to iframe test" },
