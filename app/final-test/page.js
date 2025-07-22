@@ -1,7 +1,6 @@
 "use client"
-import { useState, useEffect } from 'react';
+import {useState, useEffect} from 'react';
 import Head from 'next/head';
-import styles from '../styles/Home.module.css';
 
 export default function FinalTestPage() {
     const [isBridgeReady, setIsBridgeReady] = useState(false);
@@ -56,21 +55,21 @@ export default function FinalTestPage() {
     };
 
     return (
-        <div className={styles.container}>
+        <div>
             <Head>
                 <title>Final Bridge Test</title>
             </Head>
 
-            <main className={styles.main}>
-                <h1 className={styles.title}>
+            <main>
+                <h1>
                     ToutiaoJSBridge <code>openSchema</code> Test
                 </h1>
 
-                <p className={styles.description}>
+                <p>
                     This page will execute the precise payload discovered from public vulnerability research.
                 </p>
 
-                <div style={{ margin: '2rem 0' }}>
+                <div style={{margin: '2rem 0'}}>
                     <button
                         onClick={executePayload}
                         disabled={!isBridgeReady}
@@ -88,7 +87,14 @@ export default function FinalTestPage() {
                     </button>
                 </div>
 
-                <div style={{ marginTop: '1rem', padding: '10px', border: '1px solid #ddd', borderRadius: '5px', minHeight: '50px', background: '#f8f9fa' }}>
+                <div style={{
+                    marginTop: '1rem',
+                    padding: '10px',
+                    border: '1px solid #ddd',
+                    borderRadius: '5px',
+                    minHeight: '50px',
+                    background: '#f8f9fa'
+                }}>
                     <strong>Status:</strong> {feedback}
                 </div>
             </main>
