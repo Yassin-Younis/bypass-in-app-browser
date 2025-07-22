@@ -1,210 +1,240 @@
-"use client"; // For Next.js App Router compatibility
-
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+"use client"
+import {useState, useEffect} from 'react';
+import { useRouter } from 'next/navigation'
 import Head from 'next/head';
 
-// --- Reusable UI Component for Displaying Test Results ---
-const TestResult = ({ title, status, details }) => {
+// A small component to display test results consistently
+const TestResult = ({title, status, details}) => {
     const getStatusStyle = (s) => {
-        if (s === 'SUCCESS') return { color: '#28a745', fontWeight: 'bold' };
-        if (s === 'FAILED') return { color: '#dc3545', fontWeight: 'bold' };
-        return { color: '#6c757d', fontWeight: 'bold' }; // PENDING or INFO
+        if (s === 'SUCCESS') return {color: '#28a745', fontWeight: 'bold'};
+        if (s === 'FAILED') return {color: '#dc3545', fontWeight: 'bold'};
+        return {color: '#6c757d', fontWeight: 'bold'}; // PENDING or INFO
     };
 
     return (
-        <div style={{ border: '1px solid #ddd', padding: '15px', marginBottom: '15px', borderRadius: '8px', background: '#f9f9f9' }}>
-            <h3 style={{ margin: '0 0 10px 0' }}>{title}</h3>
-            <p style={{ margin: '0 0 5px 0' }}>
+        <div style={{
+            border: '1px solid #ddd',
+            padding: '15px',
+            marginBottom: '15px',
+            borderRadius: '8px',
+            background: '#f9f9f9'
+        }}>
+            <h3 style={{margin: '0 0 10px 0'}}>{title}</h3>
+            <p style={{margin: '0 0 5px 0'}}>
                 Status: <span style={getStatusStyle(status)}>{status}</span>
             </p>
-            <p style={{ margin: 0, fontSize: '0.9em', color: '#555' }}>{details}</p>
+            <p style={{margin: 0, fontSize: '0.9em', color: '#555'}}>{details}</p>
         </div>
     );
 };
 
 
-export default function AdvancedWebViewAnalyzer() {
+export default function WebViewAnalyzerPage() {
     const router = useRouter();
     const [testResults, setTestResults] = useState({});
     const [scanResults, setScanResults] = useState([]);
     const [scanComplete, setScanComplete] = useState(false);
-    const [postMessageLog, setPostMessageLog] = useState([]);
 
     const marketUrl = 'market://details?id=com.google.android.apps.maps';
     const intentUrl = 'intent://details?id=com.google.android.apps.maps#Intent;scheme=market;package=com.android.vending;end';
 
-    // This effect runs all tests when the page loads and sets up listeners.
+    // This effect runs all tests automatically when the page loads.
     useEffect(() => {
         runAllTests();
-
-        // Setup listener for postMessage tests
-        window.addEventListener('message', handlePostMessageResponse);
-
-        // Cleanup function to remove the listener when the component unmounts
-        return () => {
-            window.removeEventListener('message', handlePostMessageResponse);
-        };
     }, []);
 
     const updateResult = (key, status, details) => {
-        setTestResults(prev => ({ ...prev, [key]: { status, details } }));
+        setTestResults(prev => ({...prev, [key]: {status, details}}));
     };
 
-    const runAllTests = () => {
+    const runAllTests = async () => {
         setTestResults({});
         setScanComplete(false);
-        setPostMessageLog([]); // Clear logs on a new run
 
-        // --- Run Basic Navigation Tests ---
-        // window.open
-        updateResult('windowOpen', 'PENDING', `Attempting to call window.open()`);
+        // --- Test 1: Direct Navigation ---
+        updateResult('directNav', 'PENDING', 'Testing window.location.href. This test will navigate away if successful.');
+        // We can't really "catch" this if it fails, as it throws a hard navigation error.
+        // The details text serves as the instruction.
+
+        // --- Test 2: window.open() ---
+        updateResult('windowOpen', 'PENDING', `Attempting to call window.open('${marketUrl}')`);
         try {
             const newWindow = window.open(marketUrl, '_blank');
             if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
                 updateResult('windowOpen', 'FAILED', 'window.open() was blocked by the WebView or a popup blocker.');
             } else {
-                updateResult('windowOpen', 'INFO', 'window.open() was called. Check if the OS handled the intent. This usually fails.');
+                // This is tricky. The call succeeded, but the OS might still ignore the intent.
+                updateResult('windowOpen', 'SUCCESS', 'window.open() was called successfully. Check if the Play Store opened. The WebView may have blocked the subsequent intent.');
             }
         } catch (e) {
             updateResult('windowOpen', 'FAILED', `An error occurred: ${e.message}`);
         }
 
-        // --- Run JS Interface Scan ---
+        // --- Test 3: Iframe Navigation ---
+        updateResult('iframeNav', 'PENDING', 'Creating an iframe and setting its src.');
+        try {
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = marketUrl;
+            document.body.appendChild(iframe);
+            // This usually fails silently by showing a "net::ERR_UNKNOWN_URL_SCHEME" error in the iframe, which we can't easily detect.
+            updateResult('iframeNav', 'INFO', 'Iframe was created. This method usually fails silently in a secure WebView. No explicit error was caught.');
+            setTimeout(() => document.body.removeChild(iframe), 1000);
+        } catch (e) {
+            updateResult('iframeNav', 'FAILED', `An error occurred: ${e.message}`);
+        }
+
+        // --- Test 4: Form Submission ---
+        updateResult('formSubmit', 'PENDING', 'Creating and submitting a form.');
+        try {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = marketUrl;
+            document.body.appendChild(form);
+            // This will navigate the top-level frame if it works.
+            // form.submit();
+            updateResult('formSubmit', 'INFO', 'Form created. The submit() action is commented out to prevent page navigation. Manually trigger it if needed for a specific test.');
+            document.body.removeChild(form);
+        } catch (e) {
+            updateResult('formSubmit', 'FAILED', `An error occurred: ${e.message}`);
+        }
+
+        // --- Test 5: Next.js Router ---
+        updateResult('nextRouter', 'PENDING', `Attempting router.push('${marketUrl}')`);
+        try {
+            // router.push() expects a valid route. This will almost certainly throw an error in Next.js.
+            router.push(marketUrl).catch(e => {
+                // We expect this to fail because it's not a valid Next.js route.
+                updateResult('nextRouter', 'FAILED', `As expected, Next.js router blocked this invalid route. Error: ${e.message}`);
+            });
+        } catch (e) {
+            updateResult('nextRouter', 'FAILED', `An error occurred: ${e.message}`);
+        }
+
+        // --- Test 6: JS Interface Scan ---
         runJsInterfaceScan();
     };
 
     const runJsInterfaceScan = () => {
-        setScanResults([]);
+        // [The same scanning logic from the previous answer]
         const foundInterfaces = [];
-        // Expanded keyword list
-        const keywords = ['android', 'app', 'bridge', 'mobile', 'webkit', 'handler', 'toutiao', 'bytedance', 'tiktok', 'tma', 'jsi'];
-
+        const keywords = ['android', 'app', 'bridge', 'mobile', 'webkit', 'handler'];
         for (const key in window) {
             try {
-                if (window.hasOwnProperty(key) && typeof window[key] === 'object' && window[key] !== null) {
+                if (typeof window[key] === 'object' && window[key] !== null) {
                     const lowerKey = key.toLowerCase();
-                    // Find interfaces based on keywords OR non-standard naming (e.g., starting with uppercase)
-                    if (keywords.some(k => lowerKey.includes(k)) || /^[A-Z]/.test(key) || !/^[a-z]/.test(key)) {
+                    if (keywords.some(k => lowerKey.includes(k)) || !/^[a-z]/.test(key)) {
                         const methods = [];
                         for (const prop in window[key]) {
-                            // Check if the property is a function on the object itself
-                            if (typeof window[key][prop] === 'function') {
-                                methods.push(prop);
+                            if (Object.prototype.hasOwnProperty.call(window[key], prop)) {
+                                if (typeof window[key][prop] === 'function') {
+                                    methods.push(prop);
+                                }
                             }
                         }
                         if (methods.length > 0) {
-                            foundInterfaces.push({ name: key, methods: methods.sort() });
+                            foundInterfaces.push({name: key, methods: methods});
                         }
                     }
                 }
-            } catch (error) { /* Ignore errors from accessing protected properties */ }
+            } catch (error) { /* ignored */
+            }
         }
         setScanResults(foundInterfaces);
         setScanComplete(true);
     };
 
-    // --- IMPROVED Method Tester ---
     const tryMethod = (interfaceName, methodName) => {
-        const urlToTry = prompt(`Enter the URL or first argument to test with:`, intentUrl);
+        let urlToTry = prompt(`Enter the URL to test with:`, intentUrl);
         if (urlToTry === null) return;
-
         try {
-            const interfaceObject = window[interfaceName];
-            const methodToCall = interfaceObject[methodName];
-
-            alert(`Attempting to call: \n\nwindow.${interfaceName}.${methodName}.call(window.${interfaceName}, "${urlToTry}")`);
-
-            // Using .call() to explicitly set the 'this' context, which fixes many errors.
-            methodToCall.call(interfaceObject, urlToTry);
-
+            alert(`Calling: window.${interfaceName}.${methodName}("${urlToTry}")`);
+            window[interfaceName][methodName](urlToTry);
         } catch (e) {
-            alert(`An error occurred: \n\n${e.name}: ${e.message}`);
+            alert(`An error occurred: ${e.message}`);
         }
     };
 
-    // --- NEW `postMessage` Fuzzer and Listener ---
-    const handlePostMessageResponse = (event) => {
-        const logEntry = `[${new Date().toLocaleTimeString()}] Received message: ${JSON.stringify(event.data)}`;
-        setPostMessageLog(prev => [logEntry, ...prev]);
-    };
-
-    const testPostMessage = (interfaceName) => {
-        const defaultPayload = JSON.stringify({ action: 'openLink', url: marketUrl }, null, 2);
-        const payloadStr = prompt('Enter the JSON payload to send via postMessage:', defaultPayload);
-        if (!payloadStr) return;
-
-        try {
-            const payload = JSON.parse(payloadStr);
-            const interfaceObject = window[interfaceName];
-
-            const logEntry = `[${new Date().toLocaleTimeString()}] Sending to ${interfaceName}: ${payloadStr}`;
-            setPostMessageLog(prev => [logEntry, ...prev]);
-
-            // Some interfaces expect a second argument (e.g., targetOrigin)
-            interfaceObject.postMessage(payload, '*');
-
-        } catch (e) {
-            alert(`Invalid JSON or error sending message: ${e.message}`);
-        }
-    };
 
     return (
-        <div style={{ padding: '16px', fontFamily: 'Arial, sans-serif', backgroundColor: '#f4f6f8' }}>
-            <Head><title>Advanced WebView Analysis Toolkit</title></Head>
+        <div>
+            <Head>
+                <title>WebView Analysis Toolkit</title>
+            </Head>
 
-            <main style={{ maxWidth: '800px', margin: 'auto', backgroundColor: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
-                <h1 style={{ textAlign: 'center', borderBottom: '2px solid #eee', paddingBottom: '15px' }}>Advanced WebView Analysis Toolkit</h1>
-                <button onClick={runAllTests} style={{ width: '100%', padding: '12px', marginBottom: '20px', fontSize: '16px', cursor: 'pointer' }}>
-                    Scan Again
-                </button>
+            <main>
+                <h1>WebView Analysis Toolkit</h1>
 
-                <details open style={{ marginBottom: '20px' }}>
-                    <summary style={{ fontSize: '1.2em', fontWeight: 'bold', cursor: 'pointer', padding: '10px 0' }}>JavaScript Interface Scan</summary>
-                    <div style={{ padding: '10px 0' }}>
-                        {scanComplete ? (
-                            scanResults.length > 0 ? (
-                                scanResults.map((iface) => (
-                                    <div key={iface.name} style={{ border: '1px solid #ddd', padding: '15px', marginBottom: '15px', borderRadius: '8px' }}>
-                                        <h3 style={{ color: '#005a9c', wordBreak: 'break-all' }}>Interface: <code>window.{iface.name}</code></h3>
-                                        <ul style={{ listStyle: 'none', paddingLeft: 0 }}>
-                                            {iface.methods.map((method) => (
-                                                <li key={method} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #eee' }}>
+                <p>
+                    This page automatically tests various methods for escaping the WebView sandbox.
+                    <br/>
+                    <button onClick={runAllTests} style={{marginTop: '15px'}}>Run All Tests Again</button>
+                </p>
+
+                <div style={{marginTop: '2rem', width: '90%', textAlign: 'left'}}>
+                    <h2>Automated Test Suite</h2>
+                    {testResults.directNav &&
+                        <TestResult title="1. Direct Navigation (window.location)" {...testResults.directNav} />}
+                    {testResults.windowOpen &&
+                        <TestResult title="2. Popup (window.open)" {...testResults.windowOpen} />}
+                    {testResults.iframeNav && <TestResult title="3. Iframe Navigation" {...testResults.iframeNav} />}
+                    {testResults.formSubmit && <TestResult title="4. Form Submission" {...testResults.formSubmit} />}
+                    {testResults.nextRouter &&
+                        <TestResult title="5. Next.js Router (router.push)" {...testResults.nextRouter} />}
+                    <div style={{padding: '10px', background: '#e9ecef', borderRadius: '5px', marginTop: '10px'}}>
+                        <strong>Manual Test:</strong> To test Direct Navigation, <a href={marketUrl}>click this link</a>.
+                        If the page doesn't change and the Play Store doesn't open, the method is blocked.
+                    </div>
+                </div>
+
+                <div style={{
+                    marginTop: '2rem',
+                    width: '90%',
+                    textAlign: 'left',
+                    borderTop: '2px solid #ccc',
+                    paddingTop: '2rem'
+                }}>
+                    <h2>JavaScript Interface Scan</h2>
+                    {scanComplete ? (
+                        scanResults.length > 0 ? (
+                            scanResults.map((iface, index) => (
+                                <div key={index} style={{
+                                    border: '1px solid #ddd',
+                                    padding: '15px',
+                                    marginBottom: '15px',
+                                    borderRadius: '8px',
+                                    background: '#f9f9f9'
+                                }}>
+                                    <h3 style={{margin: '0 0 10px 0', color: '#0070f3'}}>
+                                        Interface Found: <code>window.{iface.name}</code>
+                                    </h3>
+                                    <strong>Available Methods:</strong>
+                                    {iface.methods.length > 0 ? (
+                                        <ul style={{listStyle: 'none', paddingLeft: '0'}}>
+                                            {iface.methods.map((method, methodIndex) => (
+                                                <li key={methodIndex} style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'space-between',
+                                                    padding: '8px',
+                                                    background: '#fff',
+                                                    border: '1px solid #eee',
+                                                    marginTop: '5px'
+                                                }}>
                                                     <code>{method}()</code>
-                                                    {method === 'postMessage' ? (
-                                                        <button onClick={() => testPostMessage(iface.name)} style={{cursor: 'pointer', padding: '5px 10px', backgroundColor: '#ffc107'}}>Test `postMessage`</button>
-                                                    ) : (
-                                                        <button onClick={() => tryMethod(iface.name, method)} style={{cursor: 'pointer', padding: '5px 10px'}}>Test Method</button>
-                                                    )}
+                                                    <button onClick={() => tryMethod(iface.name, method)}
+                                                            style={{cursor: 'pointer', padding: '5px 10px'}}>
+                                                        Test
+                                                    </button>
                                                 </li>
                                             ))}
                                         </ul>
-                                    </div>
-                                ))
-                            ) : <p><strong>No potential JavaScript interfaces were found.</strong></p>
-                        ) : <p>Scanning...</p>}
-                    </div>
-                </details>
-
-                <details style={{ marginBottom: '20px' }}>
-                    <summary style={{ fontSize: '1.2em', fontWeight: 'bold', cursor: 'pointer', padding: '10px 0' }}>`postMessage` Log</summary>
-                    <div style={{ marginTop: '10px' }}>
-                        <p>This log shows messages sent to and received from the app via `postMessage`.</p>
-                        <div style={{ background: '#1d1f21', color: '#c5c8c6', padding: '15px', borderRadius: '5px', minHeight: '150px', whiteSpace: 'pre-wrap', wordBreak: 'break-all', fontFamily: 'monospace', fontSize: '14px' }}>
-                            {postMessageLog.length > 0 ? postMessageLog.join('\n') : 'Listening for messages...'}
-                        </div>
-                    </div>
-                </details>
-
-                <details>
-                    <summary style={{ fontSize: '1.2em', fontWeight: 'bold', cursor: 'pointer', padding: '10px 0' }}>Basic Navigation Tests</summary>
-                    <div style={{ padding: '10px 0' }}>
-                        {testResults.windowOpen && <TestResult title="Popup (window.open)" {...testResults.windowOpen} />}
-                        <div style={{ padding: '15px', background: '#e9ecef', borderRadius: '5px', marginTop: '10px' }}>
-                            <strong>Manual Test:</strong> <a href={marketUrl} target="_blank" rel="noopener noreferrer">Click this link</a> to test direct navigation.
-                        </div>
-                    </div>
-                </details>
+                                    ) : (<p>No methods found.</p>)}
+                                </div>
+                            ))
+                        ) : (<p><strong>No potential JavaScript interfaces were found.</strong></p>)
+                    ) : (<p>Scanning for JS interfaces...</p>)}
+                </div>
             </main>
         </div>
     );
