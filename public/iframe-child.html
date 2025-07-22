@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Iframe Child</title>
+</head>
+<body>
+<p>Iframe content loaded. Listening for command...</p>
+
+<script>
+    // This script runs inside the iframe
+    console.log("Iframe Child: Script loaded. Ready.");
+
+    // 1. Listen for a message from the parent page
+    window.addEventListener('message', function (event) {
+        console.log("Iframe Child: Received message from parent:", event.data);
+
+        // 2. Check if the message is the attack command we expect
+        if (event.data && event.data.command === 'ATTEMPT_ESCAPE') {
+
+            // Send an acknowledgement back to the parent for logging purposes
+            window.parent.postMessage({status: 'ACK_COMMAND_RECEIVED'}, '*');
+            console.log("Iframe Child: Command received. Attempting escape maneuver.");
+
+            try {
+                // 3. THE ESCAPE MANEUVER:
+                // Try to change the location of the top-level window (the main WebView page)
+                window.top.location.href = event.data.url;
+            } catch (e) {
+                console.error("Iframe Child: Escape maneuver failed.", e);
+                // Report the failure back to the parent
+                window.parent.postMessage({status: 'ERROR', message: e.toString()}, '*');
+            }
+        }
+    });
+</script>
+</body>
+</html>

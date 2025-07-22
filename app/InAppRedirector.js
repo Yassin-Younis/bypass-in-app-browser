@@ -174,70 +174,46 @@ export default function InAppRedirector() {
                 </div>
             )}
 
-            <a
-                href={"/scan"}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{textDecoration: 'none'}}
-            >
-                Go to scanner
-            </a>
-            <a
-                href={"/fuzzer"}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{textDecoration: 'none'}}
-            >
-                Go to fuzzer
-            </a>
-            <a
-                href={"/final-test"}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{textDecoration: 'none'}}
-            >
-                Go to final
-            </a>
-            <a
-                href={"/listen"}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{textDecoration: 'none'}}
-            >
-                Go to listen
-            </a>
-            <a
-                href={"/test1"}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{textDecoration: 'none'}}
-            >
-                Go to test 1
-            </a>
-            <a
-                href={"/initTest"}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{textDecoration: 'none'}}
-            >
-                Go to init test
-            </a>
-            <a
-                href={"/chainTest"}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{textDecoration: 'none'}}
-            >
-                Go to chain test
-            </a>
-            <a
-                href={"/hail-marry"}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{textDecoration: 'none'}}
-            >
-                Go to hail marry
-            </a>
+            <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
+                padding: '16px',
+                backgroundColor: '#f9f9f9',
+                borderRadius: '8px',
+                width: 'fit-content',
+                fontFamily: 'Arial, sans-serif'
+            }}>
+                {[
+                    { href: "/scan", text: "Go to scanner" },
+                    { href: "/fuzzer", text: "Go to fuzzer" },
+                    { href: "/final-test", text: "Go to final" },
+                    { href: "/listen", text: "Go to listen" },
+                    { href: "/test1", text: "Go to test 1" },
+                    { href: "/initTest", text: "Go to init test" },
+                    { href: "/chainTest", text: "Go to chain test" },
+                    { href: "/iframe", text: "Go to iframe test" },
+                    { href: "/hail-marry", text: "Go to hail marry" },
+                ].map(({ href, text }) => (
+                    <a
+                        key={href}
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                            textDecoration: 'none',
+                            color: '#0070f3',
+                            padding: '6px 12px',
+                            borderRadius: '4px',
+                            transition: 'background 0.2s ease',
+                        }}
+                        onMouseOver={e => e.currentTarget.style.background = '#e6f0ff'}
+                        onMouseOut={e => e.currentTarget.style.background = 'transparent'}
+                    >
+                        {text}
+                    </a>
+                ))}
+            </div>
 
 
             {!isInApp && !redirectUrl && (
