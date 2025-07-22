@@ -5,7 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="df4c17bb-9c03-4a26-b6e5-1ad929b0cf92" name="Changes" comment="build fix">
-      <change afterPath="$PROJECT_DIR$/app/scan/page.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/fuzzer/page.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/InAppRedirector.js" beforeDir="false" afterPath="$PROJECT_DIR$/app/InAppRedirector.js" afterDir="false" />
     </list>
@@ -81,7 +81,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1753195522432</updated>
-      <workItem from="1753195523461" duration="10673000" />
+      <workItem from="1753195523461" duration="11633000" />
     </task>
     <task id="LOCAL-00001" summary="init">
       <option name="closed" value="true" />
@@ -179,7 +179,23 @@
       <option name="project" value="LOCAL" />
       <updated>1753216707869</updated>
     </task>
-    <option name="localTasksCounter" value="13" />
+    <task id="LOCAL-00013" summary="build fix">
+      <option name="closed" value="true" />
+      <created>1753217379349</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1753217379349</updated>
+    </task>
+    <task id="LOCAL-00014" summary="build fix">
+      <option name="closed" value="true" />
+      <created>1753217771814</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1753217771814</updated>
+    </task>
+    <option name="localTasksCounter" value="15" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

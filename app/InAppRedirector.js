@@ -175,6 +175,14 @@ export default function InAppRedirector() {
             >
                 Go to scanner
             </a>
+            <a
+                href={"/fuzzer"}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ textDecoration: 'none' }}
+            >
+                Go to fuzzer
+            </a>
             {!isInApp && !redirectUrl && (
                 <div style={{
                     marginTop: '20px',
