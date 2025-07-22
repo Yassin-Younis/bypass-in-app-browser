@@ -6,7 +6,7 @@ This causes serious privacy concerns for once, but according to
 stackoverflow, also interferes with basic functions such as printing the
 website.
 
-[See demo here.](https://yassin-younis.github.io/bypass-in-app-browser/)
+[See demo here.](https://bypass-in-app-browser.vercel.app/)
 
 To try out the demo, you can:
 
