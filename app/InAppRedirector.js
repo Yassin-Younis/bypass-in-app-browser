@@ -118,6 +118,8 @@ export default function InAppRedirector() {
         }
     }, [isInApp, phoneType, hasRedirected]);
 
+    const apiUrl = `/api/redirectToStore?packageId=com.adamtllc.Depuff`;
+
     return (
         <div style={{ fontFamily: 'monospace', padding: '20px', backgroundColor: '#f5f5f5' }}>
             <h1 style={{ borderBottom: '1px solid #ccc', paddingBottom: '10px' }}>In-App Browser Redirector Log V5</h1>
@@ -163,10 +165,19 @@ export default function InAppRedirector() {
                     >
                         Open in Browser
                     </a>
+
                 </div>
             )}
 
-
+            <a
+                href={apiUrl}
+                // It's good practice to add these attributes for external-feeling links
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ textDecoration: 'none' }}
+            >
+                Open in Browser (API)
+            </a>
             {!isInApp && !redirectUrl && (
                 <div style={{
                     marginTop: '20px',
