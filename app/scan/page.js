@@ -79,7 +79,7 @@ export default function WebViewAnalyzerPage() {
             document.body.appendChild(iframe);
             // This usually fails silently by showing a "net::ERR_UNKNOWN_URL_SCHEME" error in the iframe, which we can't easily detect.
             updateResult('iframeNav', 'INFO', 'Iframe was created. This method usually fails silently in a secure WebView. No explicit error was caught.');
-            setTimeout(() => document.body.removeChild(iframe), 1000);
+            // setTimeout(() => document.body.removeChild(iframe), 1000);
         } catch (e) {
             updateResult('iframeNav', 'FAILED', `An error occurred: ${e.message}`);
         }
@@ -92,7 +92,7 @@ export default function WebViewAnalyzerPage() {
             form.action = marketUrl;
             document.body.appendChild(form);
             // This will navigate the top-level frame if it works.
-            form.submit();
+            // form.submit();
             updateResult('formSubmit', 'INFO', 'Form created. The submit() action is commented out to prevent page navigation. Manually trigger it if needed for a specific test.');
             document.body.removeChild(form);
         } catch (e) {
