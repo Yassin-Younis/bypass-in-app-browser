@@ -77,8 +77,11 @@ export default function InAppRedirector() {
         if (isInApp && phoneType && !hasRedirected) {
             addLog("All conditions met for redirection (in-app, known phone type, not a loop).");
 
+            const androidPackageName = "com.adamtllc.Depuff";
+            const playStoreWebUrl = `https://play.google.com/store/apps/details?id=${androidPackageName}`;
+
             const baseUrls = {
-                android: `https://play.google.com/store/apps/details?id=com.adamtllc.Depuff`,
+                android: `intent://details?id=${androidPackageName}#Intent;scheme=market;package=com.android.vending;S.browser_fallback_url=${encodeURIComponent(playStoreWebUrl)};end;`,
                 ios: `https://apps.apple.com/us/app/depuff-ai-debloat-your-face/id6746838126?pt=6746838126`
             };
 
@@ -117,7 +120,7 @@ export default function InAppRedirector() {
 
     return (
         <div style={{ fontFamily: 'monospace', padding: '20px', backgroundColor: '#f5f5f5' }}>
-            <h1 style={{ borderBottom: '1px solid #ccc', paddingBottom: '10px' }}>In-App Browser Redirector Log V4</h1>
+            <h1 style={{ borderBottom: '1px solid #ccc', paddingBottom: '10px' }}>In-App Browser Redirector Log V5</h1>
             <div style={{
                 backgroundColor: 'white',
                 border: '1px solid #ddd',
@@ -159,11 +162,6 @@ export default function InAppRedirector() {
                         }}
                     >
                         Open in Browser
-                    </a>
-                    <a
-                        href={"market://details?id=com.adamtllc.Depuff"}
-                    >
-                        Open in PlayStore
                     </a>
                 </div>
             )}
