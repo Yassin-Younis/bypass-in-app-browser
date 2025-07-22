@@ -1,4 +1,5 @@
 import {NextResponse} from 'next/server';
+export const dynamic = "force-dynamic";
 
 // The function is named GET to handle GET requests.
 // The first argument is the Request object.
