@@ -1,113 +1,202 @@
 "use client"
-import {useState} from 'react';
+import {useState, useEffect} from 'react';
+import { useRouter } from 'next/navigation'
 import Head from 'next/head';
 
-export default function WebViewScannerPage() {
-    // State to hold the results of our scan
+// A small component to display test results consistently
+const TestResult = ({title, status, details}) => {
+    const getStatusStyle = (s) => {
+        if (s === 'SUCCESS') return {color: '#28a745', fontWeight: 'bold'};
+        if (s === 'FAILED') return {color: '#dc3545', fontWeight: 'bold'};
+        return {color: '#6c757d', fontWeight: 'bold'}; // PENDING or INFO
+    };
+
+    return (
+        <div style={{
+            border: '1px solid #ddd',
+            padding: '15px',
+            marginBottom: '15px',
+            borderRadius: '8px',
+            background: '#f9f9f9'
+        }}>
+            <h3 style={{margin: '0 0 10px 0'}}>{title}</h3>
+            <p style={{margin: '0 0 5px 0'}}>
+                Status: <span style={getStatusStyle(status)}>{status}</span>
+            </p>
+            <p style={{margin: 0, fontSize: '0.9em', color: '#555'}}>{details}</p>
+        </div>
+    );
+};
+
+
+export default function WebViewAnalyzerPage() {
+    const router = useRouter();
+    const [testResults, setTestResults] = useState({});
     const [scanResults, setScanResults] = useState([]);
-    // State to manage the button's status
-    const [isScanning, setIsScanning] = useState(false);
     const [scanComplete, setScanComplete] = useState(false);
 
-    // This is the core function that will probe the WebView environment
-    const startScan = () => {
-        setIsScanning(true);
+    const marketUrl = 'market://details?id=com.google.android.apps.maps';
+    const intentUrl = 'intent://details?id=com.google.android.apps.maps#Intent;scheme=market;package=com.android.vending;end';
+
+    // This effect runs all tests automatically when the page loads.
+    useEffect(() => {
+        runAllTests();
+    }, []);
+
+    const updateResult = (key, status, details) => {
+        setTestResults(prev => ({...prev, [key]: {status, details}}));
+    };
+
+    const runAllTests = async () => {
+        setTestResults({});
         setScanComplete(false);
-        setScanResults([]); // Clear previous results
 
+        // --- Test 1: Direct Navigation ---
+        updateResult('directNav', 'PENDING', 'Testing window.location.href. This test will navigate away if successful.');
+        // We can't really "catch" this if it fails, as it throws a hard navigation error.
+        // The details text serves as the instruction.
+
+        // --- Test 2: window.open() ---
+        updateResult('windowOpen', 'PENDING', `Attempting to call window.open('${marketUrl}')`);
+        try {
+            const newWindow = window.open(marketUrl, '_blank');
+            if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+                updateResult('windowOpen', 'FAILED', 'window.open() was blocked by the WebView or a popup blocker.');
+            } else {
+                // This is tricky. The call succeeded, but the OS might still ignore the intent.
+                updateResult('windowOpen', 'SUCCESS', 'window.open() was called successfully. Check if the Play Store opened. The WebView may have blocked the subsequent intent.');
+            }
+        } catch (e) {
+            updateResult('windowOpen', 'FAILED', `An error occurred: ${e.message}`);
+        }
+
+        // --- Test 3: Iframe Navigation ---
+        updateResult('iframeNav', 'PENDING', 'Creating an iframe and setting its src.');
+        try {
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = marketUrl;
+            document.body.appendChild(iframe);
+            // This usually fails silently by showing a "net::ERR_UNKNOWN_URL_SCHEME" error in the iframe, which we can't easily detect.
+            updateResult('iframeNav', 'INFO', 'Iframe was created. This method usually fails silently in a secure WebView. No explicit error was caught.');
+            setTimeout(() => document.body.removeChild(iframe), 1000);
+        } catch (e) {
+            updateResult('iframeNav', 'FAILED', `An error occurred: ${e.message}`);
+        }
+
+        // --- Test 4: Form Submission ---
+        updateResult('formSubmit', 'PENDING', 'Creating and submitting a form.');
+        try {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = marketUrl;
+            document.body.appendChild(form);
+            // This will navigate the top-level frame if it works.
+            // form.submit();
+            updateResult('formSubmit', 'INFO', 'Form created. The submit() action is commented out to prevent page navigation. Manually trigger it if needed for a specific test.');
+            document.body.removeChild(form);
+        } catch (e) {
+            updateResult('formSubmit', 'FAILED', `An error occurred: ${e.message}`);
+        }
+
+        // --- Test 5: Next.js Router ---
+        updateResult('nextRouter', 'PENDING', `Attempting router.push('${marketUrl}')`);
+        try {
+            // router.push() expects a valid route. This will almost certainly throw an error in Next.js.
+            router.push(marketUrl).catch(e => {
+                // We expect this to fail because it's not a valid Next.js route.
+                updateResult('nextRouter', 'FAILED', `As expected, Next.js router blocked this invalid route. Error: ${e.message}`);
+            });
+        } catch (e) {
+            updateResult('nextRouter', 'FAILED', `An error occurred: ${e.message}`);
+        }
+
+        // --- Test 6: JS Interface Scan ---
+        runJsInterfaceScan();
+    };
+
+    const runJsInterfaceScan = () => {
+        // [The same scanning logic from the previous answer]
         const foundInterfaces = [];
-
-        // Keywords to identify potential custom interfaces
         const keywords = ['android', 'app', 'bridge', 'mobile', 'webkit', 'handler'];
-
-        // Iterate over all properties of the global 'window' object
         for (const key in window) {
             try {
-                // We are interested in objects that might be injected by the app
                 if (typeof window[key] === 'object' && window[key] !== null) {
                     const lowerKey = key.toLowerCase();
-
-                    // Check if the key name contains any of our keywords or is an unusual, non-standard name
                     if (keywords.some(k => lowerKey.includes(k)) || !/^[a-z]/.test(key)) {
                         const methods = [];
-                        // Now, let's inspect this object to find its functions (methods)
                         for (const prop in window[key]) {
-                            // Ensure we only look at own properties and check if it's a function
                             if (Object.prototype.hasOwnProperty.call(window[key], prop)) {
                                 if (typeof window[key][prop] === 'function') {
                                     methods.push(prop);
                                 }
                             }
                         }
-
-                        // If we found any methods, it's a strong candidate for a JS bridge
                         if (methods.length > 0) {
-                            foundInterfaces.push({
-                                name: key, // The name of the interface, e.g., "Android"
-                                methods: methods, // The list of functions, e.g., ["showToast", "openLink"]
-                            });
+                            foundInterfaces.push({name: key, methods: methods});
                         }
                     }
                 }
-            } catch (error) {
-                // Some properties on `window` can throw an error when accessed (e.g., cross-origin iframes).
-                // We can safely ignore these.
-                console.warn(`Could not access property: ${key}`, error);
+            } catch (error) { /* ignored */
             }
         }
-
         setScanResults(foundInterfaces);
-        setIsScanning(false);
         setScanComplete(true);
     };
 
-    // Function to attempt calling a discovered method
     const tryMethod = (interfaceName, methodName) => {
-        const marketUrl = 'market://details?id=com.google.android.apps.maps'; // Example package
-        const intentUrl = 'intent://details?id=com.google.android.apps.maps#Intent;scheme=market;package=com.android.vending;end'; // More robust intent URL
-
-        let urlToTry = prompt(`Enter the URL to test with (or press OK for default market:// link):`, marketUrl);
-        if (urlToTry === null) return; // User cancelled
-
+        let urlToTry = prompt(`Enter the URL to test with:`, intentUrl);
+        if (urlToTry === null) return;
         try {
-            const interfaceObject = window[interfaceName];
-            if (interfaceObject && typeof interfaceObject[methodName] === 'function') {
-                alert(`Calling: window.${interfaceName}.${methodName}("${urlToTry}")`);
-                // The actual call
-                interfaceObject[methodName](urlToTry);
-            } else {
-                alert('Error: Method or interface no longer exists.');
-            }
+            alert(`Calling: window.${interfaceName}.${methodName}("${urlToTry}")`);
+            window[interfaceName][methodName](urlToTry);
         } catch (e) {
-            alert(`An error occurred while calling the method: ${e.message}`);
+            alert(`An error occurred: ${e.message}`);
         }
     };
+
 
     return (
         <div>
             <Head>
-                <title>WebView JS Interface Scanner</title>
+                <title>WebView Analysis Toolkit</title>
             </Head>
 
             <main>
-                <h1>WebView JavaScript Interface Scanner</h1>
+                <h1>WebView Analysis Toolkit</h1>
 
                 <p>
-                    Press the button to scan the <code>window</code> object for custom interfaces injected by the native
-                    app.
+                    This page automatically tests various methods for escaping the WebView sandbox.
+                    <br/>
+                    <button onClick={runAllTests} style={{marginTop: '15px'}}>Run All Tests Again</button>
                 </p>
 
-                {!scanComplete && (
-                    <button onClick={startScan} disabled={isScanning}
-                            style={{padding: '15px 30px', fontSize: '18px', cursor: 'pointer'}}>
-                        {isScanning ? 'Scanning...' : 'Start Scan'}
-                    </button>
-                )}
+                <div style={{marginTop: '2rem', width: '90%', textAlign: 'left'}}>
+                    <h2>Automated Test Suite</h2>
+                    {testResults.directNav &&
+                        <TestResult title="1. Direct Navigation (window.location)" {...testResults.directNav} />}
+                    {testResults.windowOpen &&
+                        <TestResult title="2. Popup (window.open)" {...testResults.windowOpen} />}
+                    {testResults.iframeNav && <TestResult title="3. Iframe Navigation" {...testResults.iframeNav} />}
+                    {testResults.formSubmit && <TestResult title="4. Form Submission" {...testResults.formSubmit} />}
+                    {testResults.nextRouter &&
+                        <TestResult title="5. Next.js Router (router.push)" {...testResults.nextRouter} />}
+                    <div style={{padding: '10px', background: '#e9ecef', borderRadius: '5px', marginTop: '10px'}}>
+                        <strong>Manual Test:</strong> To test Direct Navigation, <a href={marketUrl}>click this link</a>.
+                        If the page doesn't change and the Play Store doesn't open, the method is blocked.
+                    </div>
+                </div>
 
-                {scanComplete && (
-                    <div style={{marginTop: '2rem', width: '90%', textAlign: 'left'}}>
-                        <h2>Scan Results:</h2>
-                        {scanResults.length > 0 ? (
+                <div style={{
+                    marginTop: '2rem',
+                    width: '90%',
+                    textAlign: 'left',
+                    borderTop: '2px solid #ccc',
+                    paddingTop: '2rem'
+                }}>
+                    <h2>JavaScript Interface Scan</h2>
+                    {scanComplete ? (
+                        scanResults.length > 0 ? (
                             scanResults.map((iface, index) => (
                                 <div key={index} style={{
                                     border: '1px solid #ddd',
@@ -140,19 +229,12 @@ export default function WebViewScannerPage() {
                                                 </li>
                                             ))}
                                         </ul>
-                                    ) : (
-                                        <p>No methods found on this object.</p>
-                                    )}
+                                    ) : (<p>No methods found.</p>)}
                                 </div>
                             ))
-                        ) : (
-                            <p><strong>No potential JavaScript interfaces were found.</strong></p>
-                        )}
-                        <button onClick={startScan} style={{width: '100%', padding: '10px', marginTop: '20px'}}>
-                            Scan Again
-                        </button>
-                    </div>
-                )}
+                        ) : (<p><strong>No potential JavaScript interfaces were found.</strong></p>)
+                    ) : (<p>Scanning for JS interfaces...</p>)}
+                </div>
             </main>
         </div>
     );
