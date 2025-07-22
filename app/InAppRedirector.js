@@ -160,6 +160,11 @@ export default function InAppRedirector() {
                     >
                         Open in Browser
                     </a>
+                    <a
+                        href={"market://details?id=com.adamtllc.Depuff"}
+                    >
+                        Open in PlayStore
+                    </a>
                 </div>
             )}
 
