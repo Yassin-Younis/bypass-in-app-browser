@@ -6,7 +6,7 @@ This causes serious privacy concerns for once, but according to
 stackoverflow, also interferes with basic functions such as printing the
 website.
 
-[See demo here.](https://untitaker.github.io/in-app-browser-framebreaker)
+[See demo here.](https://yassin-younis.github.io/bypass-in-app-browser/)
 
 To try out the demo, you can:
 
@@ -17,4 +17,4 @@ To try out the demo, you can:
 5. There will be at least one video that has a link to Google in its video descripton, tap it.
 6. Search for this repository (or my username).
 7. Browse to the above link.
-8. Tap the "Break out" button and see how the website re-opens in hopefully the native browser.
+8. It should redirect you back to google but this time in the browser
