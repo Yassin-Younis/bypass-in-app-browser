@@ -6,7 +6,7 @@ This causes serious privacy concerns for once, but according to
 stackoverflow, also interferes with basic functions such as printing the
 website.
 
-[See demo here.](https://untitaker.github.io/in-app-browser-framebreaker)
+[See demo here.](https://yassin-younis.github.io/bypass-in-app-browser/)
 
 To try out the demo, you can:
 
