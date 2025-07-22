@@ -98,10 +98,16 @@ export default function InAppRedirector() {
 
             const timer = setTimeout(() => {
                 if (typeof window !== "undefined") {
-                    addLog("Timer finished. REDIRECTING NOW...");
-                    window.open(finalRedirectUrl, '_blank', 'noopener,noreferrer');
+                    addLog("Timer finished. Attempting auto-redirect...");
+
+                    try {
+                        window.location.href = finalRedirectUrl;
+                    } catch (e) {
+                        addLog("Auto-redirect failed. Waiting for user click.");
+                    }
                 }
             }, 2000);
+
 
             return () => clearTimeout(timer);
         } else {
@@ -111,7 +117,7 @@ export default function InAppRedirector() {
 
     return (
         <div style={{ fontFamily: 'monospace', padding: '20px', backgroundColor: '#f5f5f5' }}>
-            <h1 style={{ borderBottom: '1px solid #ccc', paddingBottom: '10px' }}>In-App Browser Redirector Log V3</h1>
+            <h1 style={{ borderBottom: '1px solid #ccc', paddingBottom: '10px' }}>In-App Browser Redirector Log V4</h1>
             <div style={{
                 backgroundColor: 'white',
                 border: '1px solid #ddd',
@@ -136,12 +142,27 @@ export default function InAppRedirector() {
                     border: '1px solid #ffe58f'
                 }}>
                     <p>Attempting to open this page in your main browser...</p>
-                    <p>If you are not redirected automatically, please click this link:</p>
-                    <a href={redirectUrl} target="_blank" rel="noopener noreferrer" style={{ wordBreak: 'break-all' }}>
+                    <p>If it doesn’t happen automatically, tap the button below:</p>
+                    <a
+                        href={redirectUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                            display: 'inline-block',
+                            marginTop: '10px',
+                            padding: '10px 20px',
+                            backgroundColor: '#1890ff',
+                            color: 'white',
+                            textDecoration: 'none',
+                            borderRadius: '5px',
+                            fontWeight: 'bold'
+                        }}
+                    >
                         Open in Browser
                     </a>
                 </div>
             )}
+
 
             {!isInApp && !redirectUrl && (
                 <div style={{
